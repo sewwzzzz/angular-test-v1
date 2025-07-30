@@ -1,0 +1,23 @@
+.scrollbar{
+  height:20px;
+  width:127.28px;
+  border-radius: 2px;
+  background-image:repeating-linear-gradient(
+    45deg,
+    #FF0000,
+    #FF7F00 15px,
+    #FFFF00 30px,
+    #00FF00 45px,
+    #0000FF 60px,
+    #4B0082 75px,
+    #9400D3 90px
+  );
+  background-size:127.28px 127.28px;
+  animation: scroll 2.5s linear infinite;
+}
+
+@keyframes scroll{
+  0%{background-position: 0 0;}
+  100%{background-position: -127.28px 0;}
+}
+
