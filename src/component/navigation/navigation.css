@@ -1,0 +1,22 @@
+.navigation-list{
+  width:420px;
+  box-sizing: border-box;
+  border:1px solid #ffffff;
+  overflow-x:scroll;
+
+  display:flex;
+  /* column-gap控制的是row的间隔？ */
+  column-gap: 5px;
+
+  .navigation-item{
+    width:70px;
+    height:60px;
+    box-sizing: border-box;
+    border:1px solid #10d3c3; 
+    /* 防止flex在计算分配给item的宽度时如果所有item宽度超出父div的width，由于flex-shrink默认为1故会尽可能压缩iten，最后如果依然超出宽度会依据overflow属性显示滚动条 */
+    flex-shrink:0;
+    
+    text-align: center;
+    line-height:58px;   
+  }
+}

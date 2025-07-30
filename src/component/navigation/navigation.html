@@ -1,0 +1,8 @@
+<div class="navigation-list" virtualScroll itemSelector=".navigation-item"
+  observerConfig="{ rootMargin: '50px 0px', threshold: 0.01 }">
+  <div *ngFor="let item of navigationList; trackBy:trackByItems" class="navigation-item" [id]="item.id">
+    <div *ngIf="item.isVisible; else loadingState">{{item.displayIndex}}</div>
+    <ng-template #loadingState>Loading
+    </ng-template>
+  </div>
+</div>
