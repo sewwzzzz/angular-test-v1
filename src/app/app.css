@@ -1,0 +1,40 @@
+.area {
+  grid-template-areas:
+    "area-header area-header area-header"
+    "area-left area-document area-right"
+    "area-footer area-footer area-footer";
+  grid-template-columns: 500px 1fr 400px;
+  grid-template-rows: 200px 1fr 150px;
+
+  .area__header {
+    grid-area: area-header;
+  }
+
+  .area__left {
+    grid-area: area-left;
+  }
+
+  .area__document {
+    grid-area: area-document;
+    display: flex;
+    flex-direction: column;
+
+    .document__top {
+      height: 120px;
+    }
+
+    .document__view {
+      flex-grow: 1;
+      flex-shrink: 1;
+      flex-basis: 200px;
+    }
+  }
+
+  .area__right {
+    grid-area: area-right;
+  }
+
+  .area__footer {
+    grid-area: area-footer;
+  }
+}
