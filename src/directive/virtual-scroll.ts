@@ -1,11 +1,12 @@
-import { Directive, Input, ElementRef, AfterViewInit } from '@angular/core';
+import { Directive, Input, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
 import { EventBus } from '../service/event-bus';
 import { eventType } from '../config/event-type';
+import { Subject, Subscription, switchMap, takeUntil, timer } from 'rxjs';
 
 @Directive({
   selector: '[virtualScroll]'
 })
-export class VirtualScroll implements AfterViewInit {
+export class VirtualScroll implements AfterViewInit, OnDestroy {
   // 输入参数：子项选择器
   @Input('itemSelector') itemSelector: string = '';
 
@@ -15,11 +16,29 @@ export class VirtualScroll implements AfterViewInit {
   private hostElement: HTMLElement;
   private observer: IntersectionObserver | null;
   private items: Array<HTMLElement> = [];
+  private debounceFn: any;
+  private entriesArr: IntersectionObserverEntry[] = [];
 
   constructor(private el: ElementRef, private eventBusService: EventBus) {
     // 获取到宿主元素-导航容器的DOM引用
     this.hostElement = this.el.nativeElement;
     this.observer = null;
+    this.debounceFn = this.debounce(this.handleIntersection.bind(this), 1000);
+  }
+
+  /**
+   * @description 创建一个计时器
+   * @param restart$
+   */
+  private createItemVisibleSubscription(restart$: Subject<void>, stop$: Subject<void>, delay: number): Subscription {
+    return restart$.pipe(
+      switchMap(() => timer(delay).pipe(
+        takeUntil(stop$)
+      ))
+    ).subscribe(() => {
+      this.handleIntersection(this.entriesArr);
+      this.entriesArr = [];
+    })
   }
 
   /**
@@ -30,12 +49,51 @@ export class VirtualScroll implements AfterViewInit {
   }
 
   /**
+   * @description 组件销毁
+   */
+  // 组件销毁时
+  ngOnDestroy(): void {
+    this.debounceFn.destroy(); // 必须调用！
+    this.observer?.disconnect();
+  }
+
+  /**
+   * @description 防抖
+   */
+  private debounce(fn: Function, delay: number): Function {
+    let subscription: Subscription;
+    const restart$ = new Subject<void>();
+    const stop$ = new Subject<void>();
+    const debounceFn = (entries: IntersectionObserverEntry[]): void => {
+      this.entriesArr = this.entriesArr.concat(entries);
+      // 执行stop
+      stop$.next();
+      subscription?.unsubscribe();
+
+      // 存储定时器返回的引用
+      subscription = this.createItemVisibleSubscription(restart$, stop$, delay)
+      // 执行重新计时
+      restart$.next();
+    }
+
+    // 添加销毁方法
+    debounceFn.destroy = () => {
+      stop$.next();
+      subscription?.unsubscribe();
+      restart$.complete();
+      stop$.complete();
+    };
+
+    return debounceFn;
+  }
+
+  /**
    * @description 创建虚拟滚动观察者
    */
   private setupVirtualScroll(): void {
     // 创建intersectionObserver
     this.observer = new IntersectionObserver(
-      this.handleIntersection.bind(this), {
+      this.debounceFn, {
       ...this.observerConfig,
       root: this.hostElement
     }
@@ -57,7 +115,6 @@ export class VirtualScroll implements AfterViewInit {
   private handleIntersection(entries: IntersectionObserverEntry[]): void {
     entries.forEach(entry => {
       const item = entry.target as HTMLElement;
-
       if (entry.isIntersecting) {
         // 导航项进入可视区域
         this.onItemVisible(item);
@@ -107,7 +164,6 @@ export class VirtualScroll implements AfterViewInit {
     }
     return null;
   }
-
 }
 
 
